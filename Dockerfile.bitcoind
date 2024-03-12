@@ -1,0 +1,2 @@
+FROM lncm/bitcoind:v26.0
+COPY bitcoin.conf /data/.bitcoin/bitcoin.conf

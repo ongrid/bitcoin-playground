@@ -1,0 +1,28 @@
+version: '2'
+services:
+  bitcoind:
+    build:
+      context: .
+      dockerfile: Dockerfile.bitcoind
+    ports:
+      - "18443:18443"
+
+  electrumx:
+    build:
+      context: .
+      dockerfile: Dockerfile.electrumx
+    ports:
+      - "50002:50002"
+      - "50001:50001"
+      - "8000:8000"
+    expose:
+      - "50001"
+      - "50002"
+    depends_on:
+      - "bitcoind"
+    environment:
+      - DAEMON_URL=http://btc:btc@bitcoind:18443
+      - PEER_DISCOVERY=off
+      - PEER_ANNOUNCE=""
+      - COIN=BitcoinSegwit
+      - NET=regtest

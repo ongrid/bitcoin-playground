@@ -1,0 +1,31 @@
+# example of Dockerfile that installs spesmilo electrumx 1.16.0
+# ENV variables can be overridden on the `docker run` command
+
+FROM python:3.9.16-slim-bullseye
+
+WORKDIR /usr/build
+
+# Install the libs needed by rocksdb (including development headers)
+RUN apt-get update \
+    && apt-get -y --no-install-recommends install \
+        librocksdb-dev libsnappy-dev libbz2-dev libz-dev liblz4-dev git gcc python3-dev libc-dev g++
+
+RUN pip install -U pip
+RUN pip install "Cython<3.0"
+RUN pip install e-x[rapidjson,rocksdb]
+RUN git clone https://github.com/spesmilo/electrumx.git
+RUN pip install ./electrumx
+
+ENV SERVICES="tcp://:50001"
+ENV COIN=Bitcoin
+ENV DB_DIRECTORY=/var/lib/electrumx
+ENV DAEMON_URL="http://username:password@hostname:port/"
+ENV ALLOW_ROOT=true
+ENV DB_ENGINE=rocksdb
+ENV MAX_SEND=10000000
+ENV BANDWIDTH_UNIT_COST=50000
+ENV CACHE_MB=2000
+
+RUN mkdir -p "$DB_DIRECTORY" && ulimit -n 1048576
+
+CMD ["python", "/usr/local/bin/electrumx_server"]
