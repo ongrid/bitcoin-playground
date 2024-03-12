@@ -9,6 +9,7 @@ from electrum_rpc_client import ElectrumRpcClient
 from bitcoind_rpc_client import BitcoindRpcClient
 from pprint import pprint
 from time import sleep
+import random
 
 MNEMONIC = "test test test test test test test test test test test junk"
 BITCOIND_URL = "http://bitcoind:18443/"
@@ -31,19 +32,14 @@ miner_p2tr = miner_priv_key.get_public_key().get_taproot_address()
 btc = BitcoindRpcClient(BITCOIND_URL, BITCOIND_USER, BITCOIND_PASSWORD)
 ele = ElectrumRpcClient(ELECTRUMX_HOST, ELECTRUMX_PORT)
 
-unspent = ele.call(
-    "blockchain.scripthash.listunspent",
-    [get_script_hash(alice_p2tr.to_string(), network=NETWORK)],
-)
-print(f"Alice's UTXO(s):")
-pprint(unspent)
+# Random byte to check reliability
+# Fixed in https://github.com/karask/python-bitcoin-utils/pull/64
+# related: https://github.com/karask/python-bitcoin-utils/issues/63
+random_byte = format(random.randint(0, 255), '02x')
+# this is the maximum length that fits into single position of Script
+# (found it experimantally)
+payload = 'deadbeef' * 129 + "dead" + random_byte
 
-vin = TxInput(unspent[0]["tx_hash"], unspent[0]["tx_pos"])
-
-sat_per_vbyte = 2.0
-payload = "deadbeef" * 20
-print(payload)
-print(len(payload))
 taproot_script_p2pk = Script(
     [
         alice_priv_key.get_public_key().to_x_only_hex(),
@@ -54,7 +50,8 @@ taproot_script_p2pk = Script(
         "01",
         "text/plain;charset=utf-8".encode("utf-8").hex(),
         "OP_0",
-        payload,
+        # bitcoind doesn't accept larger payloads
+        *[payload]*765,
         "OP_ENDIF",
     ]
 )
@@ -123,14 +120,16 @@ sig = alice_priv_key.sign_taproot_input(
     tapleaf_scripts=[taproot_script_p2pk],
     tweak=False,
 )
-control_block = ControlBlock(alice_priv_key.get_public_key())
+control_block = ControlBlock(alice_priv_key.get_public_key(), is_odd=taproot_script_address.is_odd())
 rev_tx.witnesses.append(
     TxWitnessInput([sig, taproot_script_p2pk.to_hex(), control_block.to_hex()])
 )
 print("Reveal Tx:", rev_tx.get_txid())
 print(rev_tx.serialize())
-res = ele.call("blockchain.transaction.broadcast", [rev_tx.serialize()])
-
+print(f"Script Len {len(taproot_script_p2pk.to_hex())/2} bytes")
+print(f"Tx Len {len(rev_tx.serialize())/2} bytes")
+res = btc.call("sendrawtransaction", rev_tx.serialize())
+print("Reveal Tx broadcasted:", res.json()['result'])
 # wait reveal tx mined and reveal UTXO become spendable by Alice
 while True:
     unspent = ele.call(

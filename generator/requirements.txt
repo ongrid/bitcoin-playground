@@ -1,6 +1,6 @@
 base58==2.1.1
 base58check==1.0.2
-bitcoin-utils==0.6.5
+bitcoin-utils==0.6.6
 btclib==2023.7.12
 btclib_libsecp256k1==0.4.0
 certifi==2024.2.2
