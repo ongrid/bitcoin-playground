@@ -70,13 +70,37 @@ reveal_fee_satoshis = fee_calculator.predict_fee(reveal_vsize_bytes)
 inscription_utxo_value = 1250
 commit_value = reveal_fee_satoshis + inscription_utxo_value
 commit_fee = 10_000  # need to calculate
-change_value = unspent[0]["value"] - commit_value - commit_fee
+
+# find spendable UTXO that can pay both commit and reveal (the simplest case)
+# Generate (mine) if no UTXO available
+spendable_utxo = None
+while True:
+    unspent = ele.call(
+        "blockchain.scripthash.listunspent",
+        [get_script_hash(alice_p2tr.to_string(), network=NETWORK)],
+    )
+    for i in unspent:
+        if i['value'] > commit_value + commit_fee:
+            spendable_utxo = i
+            break
+    else:
+        print("No UTXO that we can use. Mining new satoshis.")
+        btc.call("generatetoaddress", 1, alice_p2tr.to_string())
+        # add new blocks to avoid errors like
+        # bad-txns-premature-spend-of-coinbase, tried to spend coinbase at depth 5
+        btc.call("generatetoaddress", 100, miner_p2tr.to_string())
+        continue
+    print(f"Found UTXO to spend {spendable_utxo}")
+    break
+
+vin = TxInput(spendable_utxo["tx_hash"], spendable_utxo["tx_pos"])
+change_value = spendable_utxo["value"] - commit_value - commit_fee
 
 vout_commit = TxOutput(commit_value, taproot_script_address.to_script_pub_key())
 vout_change = TxOutput(change_value, alice_p2tr.to_script_pub_key())
 commit_tx = Transaction([vin], [vout_commit, vout_change], has_segwit=True)
 sig = alice_priv_key.sign_taproot_input(
-    commit_tx, 0, [alice_p2tr.to_script_pub_key()], [unspent[0]["value"]]
+    commit_tx, 0, [alice_p2tr.to_script_pub_key()], [spendable_utxo["value"]]
 )
 commit_tx.witnesses.append(TxWitnessInput([sig]))
 print("Commit Tx:", commit_tx.get_txid())
