@@ -31,19 +31,15 @@ miner_p2tr = miner_priv_key.get_public_key().get_taproot_address()
 btc = BitcoindRpcClient(BITCOIND_URL, BITCOIND_USER, BITCOIND_PASSWORD)
 ele = ElectrumRpcClient(ELECTRUMX_HOST, ELECTRUMX_PORT)
 
-unspent = ele.call(
-    "blockchain.scripthash.listunspent",
-    [get_script_hash(alice_p2tr.to_string(), network=NETWORK)],
-)
-print(f"Alice's UTXO(s):")
-pprint(unspent)
+# Here is unreliable code due to bug
+# https://github.com/karask/python-bitcoin-utils/issues/63
+# Lucky payloads
+# payload = 'deadbeef' * 31 + "dead" + '83'
+payload = 'deadbeef' * 31 + "dead" + '53'
+# Always failing payloads
+# payload = 'deadbeef' * 31 + "dead" + 'f3'
+# payload = 'deadbeef' * 31 + "dead" + '7b'
 
-vin = TxInput(unspent[0]["tx_hash"], unspent[0]["tx_pos"])
-
-sat_per_vbyte = 2.0
-payload = "deadbeef" * 20
-print(payload)
-print(len(payload))
 taproot_script_p2pk = Script(
     [
         alice_priv_key.get_public_key().to_x_only_hex(),
