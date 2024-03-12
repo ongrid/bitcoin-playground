@@ -26,3 +26,10 @@ services:
       - PEER_ANNOUNCE=""
       - COIN=BitcoinSegwit
       - NET=regtest
+
+  generator:
+    build:
+      context: generator 
+    depends_on:
+      - "bitcoind"
+      - "electrumx"
