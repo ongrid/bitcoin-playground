@@ -121,4 +121,5 @@ while True:
     else:
         btc.call("generatetoaddress", 1, miner_p2tr.to_string())
         sleep(1)
+        continue
     break
