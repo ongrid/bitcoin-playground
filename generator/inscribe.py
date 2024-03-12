@@ -108,10 +108,9 @@ res = ele.call("blockchain.transaction.broadcast", [commit_tx.serialize()])
 
 vin = TxInput(commit_tx.get_txid(), 0)
 
-# todo: refactor
 vout = TxOutput(
     inscription_utxo_value,
-    Script.from_raw(ScriptPubKey.from_address(alice_p2tr.to_string()).script.hex()),
+    alice_p2tr.to_script_pub_key()
 )
 rev_tx = Transaction([vin], [vout], has_segwit=True)
 sig = alice_priv_key.sign_taproot_input(
