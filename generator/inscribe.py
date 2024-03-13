@@ -119,7 +119,7 @@ sig = alice_priv_key.sign_taproot_input(
     tapleaf_scripts=[taproot_script_p2pk],
     tweak=False,
 )
-control_block = ControlBlock(alice_priv_key.get_public_key())
+control_block = ControlBlock(alice_priv_key.get_public_key(), is_odd=taproot_script_address.is_odd())
 rev_tx.witnesses.append(
     TxWitnessInput([sig, taproot_script_p2pk.to_hex(), control_block.to_hex()])
 )
