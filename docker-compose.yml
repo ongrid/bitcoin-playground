@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile.bitcoind
     ports:
       - "18443:18443"
+    command: -txindex
 
   electrumx:
     build:
@@ -26,6 +27,20 @@ services:
       - PEER_ANNOUNCE=""
       - COIN=BitcoinSegwit
       - NET=regtest
+
+  ord:
+    build:
+      context: ord
+    depends_on:
+      - "bitcoind"
+    environment:
+      - ORD_BITCOIN_RPC_USERNAME=btc
+      - ORD_BITCOIN_RPC_PASSWORD=btc
+      - ORD_BITCOIN_RPC_URL=http://bitcoind:18443
+      - ORD_CHAIN=regtest
+    ports:
+      - "80:80"
+    command: ord server
 
   generator:
     build:

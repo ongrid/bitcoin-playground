@@ -1,3 +1,6 @@
 [submodule "electrumx"]
 	path = electrumx
 	url = https://github.com/spesmilo/electrumx.git
+[submodule "ord"]
+	path = ord
+	url = https://github.com/ordinals/ord.git
