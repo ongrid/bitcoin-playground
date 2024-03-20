@@ -117,7 +117,6 @@ sig = alice_priv_key.sign_taproot_input(
     [commit_tx.outputs[0].amount],
     script_path=True,
     tapleaf_script=taproot_script_p2pk,
-    tapleaf_scripts=[taproot_script_p2pk],
     tweak=False,
 )
 control_block = ControlBlock(alice_priv_key.get_public_key(), is_odd=taproot_script_address.is_odd())
