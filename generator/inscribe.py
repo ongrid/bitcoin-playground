@@ -32,13 +32,8 @@ miner_p2tr = miner_priv_key.get_public_key().get_taproot_address()
 btc = BitcoindRpcClient(BITCOIND_URL, BITCOIND_USER, BITCOIND_PASSWORD)
 ele = ElectrumRpcClient(ELECTRUMX_HOST, ELECTRUMX_PORT)
 
-# Random byte to check reliability
-# Fixed in https://github.com/karask/python-bitcoin-utils/pull/64
-# related: https://github.com/karask/python-bitcoin-utils/issues/63
-random_byte = format(random.randint(0, 255), '02x')
-# this is the maximum length that fits into single position of Script
-# (found it experimantally)
-payload = 'deadbeef' * 129 + "dead" + random_byte
+with open("content/Background_Green.png", "rb") as file:
+    content = file.read()
 
 taproot_script_p2pk = Script(
     [
@@ -48,10 +43,9 @@ taproot_script_p2pk = Script(
         "OP_IF",
         "ord".encode("utf-8").hex(),
         "01",
-        "text/plain;charset=utf-8".encode("utf-8").hex(),
+        "image/png".encode("utf-8").hex(),
         "OP_0",
-        # bitcoind doesn't accept larger payloads
-        *[payload]*765,
+        content.hex(),
         "OP_ENDIF",
     ]
 )
