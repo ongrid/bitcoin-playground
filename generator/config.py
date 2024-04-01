@@ -10,6 +10,7 @@ ELECTRUMX_PORT = 50001
 BITCOIND_USER = "btc"
 BITCOIND_PASSWORD = "btc"
 NETWORK = "regtest"
+SUPPORTED_MIME_TYPES = ["text/html", "image/png", "image/svg", "image/webp", "text/javascript"]
 
 setup(NETWORK)
 hdw = HDWallet(mnemonic=MNEMONIC)
